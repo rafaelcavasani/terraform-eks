@@ -13,6 +13,13 @@ data "aws_availability_zones" "available" {
   }
 }
 
+data "aws_caller_identity" "current" {}
+
+data "aws_eks_cluster" "current" {
+  name = local.cluster_name
+  depends_on = [module.eks]
+}
+
 locals {
   cluster_name = "eks-addons"
 }
@@ -86,6 +93,23 @@ module "eks" {
       desired_size = 1
     }
   }
+}
+
+resource "aws_iam_role" "eks" {
+  name = "eks-cluster-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action    = "sts:AssumeRole"
+        Principal = {
+          Service = "eks.amazonaws.com"
+        }
+        Effect    = "Allow"
+        Sid       = ""
+      },
+    ]
+  })
 }
 
 
